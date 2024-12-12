@@ -1,28 +1,35 @@
 import * as anchor from "@coral-xyz/anchor";
 import { Program } from "@coral-xyz/anchor";
 import { CrudContract } from "../target/types/crud_contract";
-import {Keypair} from '@solana/web3.js'
+import { Keypair } from '@solana/web3.js'
 
 describe("crud_contract", () => {
-  // Configure the client to use the local cluster.
-  anchor.setProvider(anchor.AnchorProvider.env());
+
   const provider = anchor.AnchorProvider.env()
-  const program = anchor.workspace.CrudContract as Program<CrudContract>;
+  anchor.setProvider(provider);
+
   const payer = provider.wallet as anchor.Wallet
+  const program = anchor.workspace.CrudContract as Program<CrudContract>;
   const crudKeypair = Keypair.generate()
 
   it("Is initialized!", async () => {
-    await program.methods
-    .initialize()
-    .accounts({
+    await program.methods.initialize().accounts({
       crud: crudKeypair.publicKey,
       payer: payer.publicKey,
-    })
-    .signers([crudKeypair])
-    .rpc()
+    }).signers([crudKeypair]).rpc();
 
-  // const currentCount = await program.account.crud.fetch(crudKeypair.publicKey)
+    const currentCount = await program.account.crud.fetch(crudKeypair.publicKey)
 
-  // expect(currentCount.count).toEqual(0)
+    console.log("current count after initialization: ", currentCount);
+
+    await program.methods.increment().accounts({
+      crud: crudKeypair.publicKey,
+    }).rpc();
+
+    const newCount = await program.account.crud.fetch(crudKeypair.publicKey)
+
+    console.log("new count after increment: ", newCount);
+
+
   });
 });
